@@ -65,7 +65,7 @@ Rails.application.routes.draw do
 
     resources :statuses, only: [:show] do
       member do
-        get :activity
+        get '/activity(/:activity_id)', to: 'statuses#activity', as: :activity
         get :embed
       end
 
@@ -322,7 +322,7 @@ Rails.application.routes.draw do
 
     # JSON / REST API
     namespace :v1 do
-      resources :statuses, only: [:create, :show, :destroy] do
+      resources :statuses, only: [:create, :show, :update, :destroy] do
         scope module: :statuses do
           resources :reblogged_by, controller: :reblogged_by_accounts, only: :index
           resources :favourited_by, controller: :favourited_by_accounts, only: :index
@@ -340,6 +340,8 @@ Rails.application.routes.draw do
 
           resource :pin, only: :create
           post :unpin, to: 'pins#destroy'
+
+          resources :history, controller: :histories, only: :index
         end
 
         member do

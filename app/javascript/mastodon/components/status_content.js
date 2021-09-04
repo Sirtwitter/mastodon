@@ -1,7 +1,7 @@
 import React from 'react';
 import ImmutablePropTypes from 'react-immutable-proptypes';
 import PropTypes from 'prop-types';
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, injectIntl } from 'react-intl';
 import Permalink from './permalink';
 import classnames from 'classnames';
 import PollContainer from 'mastodon/containers/poll_container';
@@ -10,6 +10,7 @@ import { autoPlayGif } from 'mastodon/initial_state';
 
 const MAX_HEIGHT = 642; // 20px * 32 (+ 2px padding at the top)
 
+@injectIntl
 export default class StatusContent extends React.PureComponent {
 
   static contextTypes = {
@@ -24,6 +25,7 @@ export default class StatusContent extends React.PureComponent {
     onClick: PropTypes.func,
     collapsable: PropTypes.bool,
     onCollapsedToggle: PropTypes.func,
+    intl: PropTypes.object.isRequired,
   };
 
   state = {
@@ -168,11 +170,12 @@ export default class StatusContent extends React.PureComponent {
   }
 
   render () {
-    const { status } = this.props;
+    const { status, intl } = this.props;
 
     const hidden = this.props.onExpandedToggle ? !this.props.expanded : this.state.hidden;
     const renderReadMore = this.props.onClick && status.get('collapsed');
     const renderViewThread = this.props.showThread && status.get('in_reply_to_id') && status.get('in_reply_to_account_id') === status.getIn(['account', 'id']);
+    const renderEditedLabel = status.get('edited_at');
 
     const content = { __html: status.get('contentHtml') };
     const spoilerContent = { __html: status.get('spoilerHtml') };
@@ -192,6 +195,12 @@ export default class StatusContent extends React.PureComponent {
       <button className='status__content__read-more-button' onClick={this.props.onClick} key='read-more'>
         <FormattedMessage id='status.read_more' defaultMessage='Read more' /><Icon id='angle-right' fixedWidth />
       </button>
+    );
+
+    const editedLabel = (
+      <span className='status__content__edited-label'>
+        <FormattedMessage id='status.edited' defaultMessage='Edited {date}' values={{ date: intl.formatDate(status.get('edited_at'), { year: 'numeric', month: 'short', day: '2-digit' }) }} />
+      </span>
     );
 
     if (status.get('spoiler_text').length > 0) {
@@ -239,6 +248,8 @@ export default class StatusContent extends React.PureComponent {
 
       if (renderReadMore) {
         output.push(readMoreButton);
+      } else if (renderEditedLabel) {
+        output.push(editedLabel);
       }
 
       return output;
